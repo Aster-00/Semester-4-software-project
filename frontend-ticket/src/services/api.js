@@ -19,13 +19,13 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Clear user info from localStorage
       localStorage.removeItem('user');
-      
+
       // Redirect to login page if not already there
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -33,9 +33,11 @@ api.interceptors.response.use(
 // Auth service endpoints
 export const authService = {
   login: (credentials) => api.post('/v1/login', credentials),
-  register: (userData) => api.post('/auth/register', userData),
-  viewprofile:()=> api.get('v1/users/profile'),
-  forgotPassword: (email) => api.post('/auth/forgot-password', { email })
+  register: (userData) => api.post('/v1/register', userData),
+  viewprofile: () => api.get('/v1/users/profile'),
+  requestPasswordReset: (email) => api.post('/v1/request-password-reset', { email }),
+  resetPassword: (data) => api.put('/v1/forgot-password', data),
+  updateRole: (role) => api.put(`/v1/users/update-role/${role}`)
 };
 
 // Events service endpoints
@@ -47,9 +49,9 @@ export const eventService = {
   deleteEvent: (id) => api.delete(`/events/${id}`)
 };
 
-export const profileService={
-  viewprofile:()=> api.get('v1/users/profile'),
-  editProfile:(dataToSend)=> api.put('v1/users/profile',dataToSend)
+export const profileService = {
+  viewprofile: () => api.get('v1/users/profile'),
+  editProfile: (dataToSend) => api.put('v1/users/profile', dataToSend)
 }
 
 export default api;

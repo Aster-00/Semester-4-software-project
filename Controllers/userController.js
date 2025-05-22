@@ -4,7 +4,7 @@ const organizerModel = require('../Models/Organizer');
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
-const secretKey = process.env.secretKey;
+const secretkey = process.env.secretkey;
 const nodemailer = require("nodemailer");
 
 const otpStore = new Map(); // Store: email -> { otp, hashedPassword, expiresAt }
@@ -15,8 +15,8 @@ const sendOTPEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "noorjjj2006@gmail.com",       // Replace with real Gmail
-      pass: "crfj epkw eblp rata",          // Replace with Gmail App Password
+      user: "noorjjj2006@gmail.com",
+      pass: "crfj epkw eblp rata",
     },
   });
 
@@ -30,29 +30,27 @@ const sendOTPEmail = async (email, otp) => {
   await transporter.sendMail(mailOptions);
 };
 const userController = {
-  register:async (req,res) =>{
+  register: async (req, res) => {
     try {
-      const {name,email, password,  role}= req.body;
-      const existingUser = await userModel.findOne({email})
-      if(existingUser)
-      {
-        return res.status(409).json({message : "user already exists"});
+      const { name, email, password, role } = req.body;
+      const existingUser = await userModel.findOne({ email })
+      if (existingUser) {
+        return res.status(409).json({ message: "user already exists" });
       }
-      const hashPassword = await bcrypt.hash(password,10);
+      const hashPassword = await bcrypt.hash(password, 10);
 
       const newUser = new userModel({
         name,
         email,
-        password:hashPassword,
+        password: hashPassword,
         role,
       });
       await newUser.save();
-      res.status(201).json({message: "user registered successfully"});
+      res.status(201).json({ message: "user registered successfully" });
     }
-    catch(error)
-    {
-      console.error("error registering user:",error);
-      res.status(500).json({message: "error registering user"});
+    catch (error) {
+      console.error("error registering user:", error);
+      res.status(500).json({ message: "error registering user" });
     }
   },
   login: async (req, res) => {
@@ -62,58 +60,75 @@ const userController = {
       // Find the user by email
       const user = await userModel.findOne({ email });
       if (!user) {
-        return res.status(404).json({ message: "email not found" });
+        return res.status(404).json({ message: "Email not found" });
       }
 
-      console.log("password: ", user.password);
       // Check if the password is correct
-
       const passwordMatch = await bcrypt.compare(password, user.password);
       if (!passwordMatch) {
-        return res.status(405).json({ message: "incorect password" });
+        return res.status(401).json({ message: "Incorrect password" });
       }
 
-      const currentDateTime = new Date();
-      const expiresAt = new Date(+currentDateTime + 180000); // expire in 3 minutes
       // Generate a JWT token
       const token = jwt.sign(
-        { user: { _id: user._id, role: user.role } },
-        secretKey,
-        { expiresIn: 3 * 600 } // or whatever expiration you want
+        {
+          user: {
+            _id: user._id,
+            role: user.role,
+            email: user.email
+          }
+        },
+        secretkey,
+        { expiresIn: '1h' }
       );
 
+      // Set cookie expiration
+      const cookieExpiration = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Send the response
       return res
         .cookie("token", token, {
-          expires: expiresAt,
+          expires: cookieExpiration,
           httpOnly: true,
-          secure: false,
+          secure: process.env.NODE_ENV === 'production',
           sameSite: "lax",
         })
         .status(200)
-        .json({ message: "login successfully", user });
+        .json({
+          message: "Login successful",
+          user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+          }
+        });
+
     } catch (error) {
       console.error("Error logging in:", error);
-      res.status(500).json({ message: "Server error" });
+      res.status(500).json({
+        message: "Server error during login",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   },
-  getAllUsers: async (req,res)=>{
+  getAllUsers: async (req, res) => {
     try {
       const users = await userModel.find();
       console.log("success");
       return res.status(200).json(users);
 
     }
-    catch(error)
-    {
-      return res.status(500).json({message: error.message});
+    catch (error) {
+      return res.status(500).json({ message: error.message });
     }
 
-  } ,
+  },
 
 
-  updateUser: async (req,res)=> {
+  updateUser: async (req, res) => {
     try {
-      const userId = req.user._id; 
+      const userId = req.user._id;
       const user = await userModel.findByIdAndUpdate(
         userId,
         {
@@ -125,32 +140,28 @@ const userController = {
           new: true,
         }
       );
-      return res.status(200).json({user,msg:"User updated successfully"});
+      return res.status(200).json({ user, msg: "User updated successfully" });
 
     }
-    catch (error)
-    {
-      return res.status(500).json({message: error.message});
+    catch (error) {
+      return res.status(500).json({ message: error.message });
     }
   },
 
-  getUserEvents: async(req,res)=>
-  {
+  getUserEvents: async (req, res) => {
     try {
       const userID = req.user._id;
-      const events = await eventModel.find({participants: userID})
-      if(events.length ==0)
-      {
-        return res.status(200).json({message: "no events found for the user"});
+      const events = await eventModel.find({ participants: userID })
+      if (events.length == 0) {
+        return res.status(200).json({ message: "no events found for the user" });
       }
       return res.status(200).json(events);
     }
-    catch (error){
-      return res.status(500).json({message: "error getting events"});
+    catch (error) {
+      return res.status(500).json({ message: "error getting events" });
     }
   },
-  getUserById: async (req, res) => 
-  {
+  getUserById: async (req, res) => {
     try {
       const user = await userModel.findById(req.params.id);
       if (!user) {
@@ -162,39 +173,37 @@ const userController = {
     }
   },
 
-  getUserEvents: async(req,res)=>
-  {
+  getUserEvents: async (req, res) => {
     try {
       const userID = req.user._id;
-      const events = await eventModel.find({participants: userID})
-      if(events.length ==0)
-      {
-        return res.status(200).json({message: "no events found for the user"});
+      const events = await eventModel.find({ participants: userID })
+      if (events.length == 0) {
+        return res.status(200).json({ message: "no events found for the user" });
       }
       return res.status(200).json(events);
     }
-    catch (error){
-      return res.status(500).json({message: "error getting events"});
+    catch (error) {
+      return res.status(500).json({ message: "error getting events" });
     }
-  }, 
+  },
 
 
   getUserProfile: async (req, res) => {
     try {
-      const userId = req.user._id; 
+      const userId = req.user._id;
 
       const user = await userModel.findById(userId);
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
 
-     res.json({ user });
+      res.json({ user });
     } catch (error) {
       console.error("Error in getUserProfile:", error);
       res.status(500).json({ error: 'Internal server error' });
     }
   },
-  deleteUser : async (req, res) => {
+  deleteUser: async (req, res) => {
     try {
       const userId = req.params.id;
       await userModel.findByIdAndDelete(userId); // ← here is where it's failing
@@ -262,32 +271,97 @@ const userController = {
     }
   },
 
-  updateRole: async (req, res)=>{
-    try
-    {
-        const newRole = req.newRole
+  updateRole: async (req, res) => {
+    try {
+      const newRole = req.newRole
 
-        if(!newRole) return res.status(400).message("Empty role")
+      if (!newRole) return res.status(400).message("Empty role")
 
-        const user = await UserModel.findByIdAndUpdate(req.params.id,
+      const user = await UserModel.findByIdAndUpdate(req.params.id,
 
-            {
-                role: req.body.role
-            },
-            {
-                new: true, 
-            }
-        );
-        return res.status(200).message("Role Updated Successfully")
-        
+        {
+          role: req.body.role
+        },
+        {
+          new: true,
+        }
+      );
+      return res.status(200).message("Role Updated Successfully")
+
     }
-    catch(err)
-    {
-        return res.status(500).json({message: error.message});
+    catch (err) {
+      return res.status(500).json({ message: error.message });
     }
-}
+  },
 
+  requestPasswordReset: async (req, res) => {
+    try {
+      const { email } = req.body;
 
+      // Check if user exists
+      const user = await userModel.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Generate OTP
+      const otp = generateOTP();
+
+      // Store OTP with expiration (5 minutes)
+      otpStore.set(email, {
+        otp,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
+      });
+
+      // Send OTP email
+      await sendOTPEmail(email, otp);
+
+      res.status(200).json({ message: "OTP sent successfully to your email" });
+    } catch (error) {
+      console.error("Error in requestPasswordReset:", error);
+      res.status(500).json({ message: "Failed to send OTP" });
+    }
+  },
+
+  resetPassword: async (req, res) => {
+    try {
+      const { email, otp, newPassword } = req.body;
+
+      // Verify OTP
+      const storedData = otpStore.get(email);
+      if (!storedData) {
+        return res.status(400).json({ message: "No OTP request found" });
+      }
+
+      if (Date.now() > storedData.expiresAt) {
+        otpStore.delete(email);
+        return res.status(400).json({ message: "OTP has expired" });
+      }
+
+      if (storedData.otp !== otp) {
+        return res.status(400).json({ message: "Invalid OTP" });
+      }
+
+      // Find user and update password
+      const user = await userModel.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save();
+
+      // Clear OTP
+      otpStore.delete(email);
+
+      res.status(200).json({ message: "Password reset successful" });
+    } catch (error) {
+      console.error("Error in resetPassword:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  },
 }
 
 module.exports = userController;

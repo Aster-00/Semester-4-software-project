@@ -48,7 +48,7 @@ const LoginForm = () => {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Login failed. Please check your credentials and try again."
+        "Login failed. Please check your credentials and try again."
       );
       console.error("Login error:", err);
     } finally {
