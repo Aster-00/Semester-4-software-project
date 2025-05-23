@@ -9,6 +9,8 @@ router.post("/login", userController.login);
 router.post("/register", userController.register);
 // * request password reset (send OTP)
 router.post("/request-password-reset", userController.requestPasswordReset);
+// * logout
+router.post("/logout", userController.logout);
 // * reset password with OTP
 router.put("/forgot-password", userController.resetPassword);
 

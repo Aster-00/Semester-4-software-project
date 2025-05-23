@@ -37,7 +37,8 @@ export const authService = {
   viewprofile: () => api.get('/v1/users/profile'),
   requestPasswordReset: (email) => api.post('/v1/request-password-reset', { email }),
   resetPassword: (data) => api.put('/v1/forgot-password', data),
-  updateRole: (role) => api.put(`/v1/users/update-role/${role}`)
+  updateRole: (role) => api.put(`/v1/users/update-role/${role}`),
+  logout: () => api.post('/v1/logout')
 };
 
 // Events service endpoints

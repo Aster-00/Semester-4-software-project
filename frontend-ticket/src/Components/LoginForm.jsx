@@ -43,8 +43,8 @@ const LoginForm = () => {
       // Store user data in localStorage
       localStorage.setItem("user", JSON.stringify(response.data.user));
 
-      // Redirect to events page or dashboard
-      navigate("/");
+      // Redirect to events page
+      navigate("/events");
     } catch (err) {
       setError(
         err.response?.data?.message ||

@@ -1,6 +1,7 @@
-import React from "react";
-import { FaSearch, FaUser } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaSearch, FaUser, FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../services/api";
 
 const styles = {
   navContainer: {
@@ -71,14 +72,58 @@ const styles = {
     marginLeft: "1.5rem",
     cursor: "pointer",
   },
+  userMenu: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    gap: "1rem",
+  },
+  userActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: "1rem",
+  },
+  logoutButton: {
+    background: "none",
+    border: "none",
+    padding: "0",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    color: "#222",
+    fontSize: "1.6rem",
+  }
 };
 
 const NavBar = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Check for user in localStorage
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      // Clear user from localStorage
+      localStorage.removeItem("user");
+      setUser(null);
+      // Redirect to events page
+      navigate("/events");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   return (
     <div style={styles.navContainer}>
       <nav style={styles.navBar}>
-        <span style={styles.logo}>A7gzly</span>
+        <span style={styles.logo} onClick={() => navigate("/")} role="button" tabIndex={0}>A7gzly</span>
         <div style={styles.searchContainer}>
           <FaSearch style={styles.searchIcon} />
           <input
@@ -90,15 +135,39 @@ const NavBar = () => {
         <div style={styles.navLinks}>
           <a href="/events" style={styles.link}>Events</a>
           <a href="/support" style={styles.link}>Contact & Support</a>
-          <FaUser
-            style={styles.icon}
-            title="Profile"
-            onClick={() => navigate("/profile")}
-            tabIndex={0}
-            role="button"
-            aria-label="Go to profile"
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate("/profile"); }}
-          />
+          <div style={styles.userActions}>
+            {user ? (
+              <>
+                <FaUser
+                  style={styles.icon}
+                  title="Profile"
+                  onClick={() => navigate("/profile")}
+                  tabIndex={0}
+                  role="button"
+                  aria-label="Go to profile"
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate("/profile"); }}
+                />
+                <button
+                  style={styles.logoutButton}
+                  onClick={handleLogout}
+                  title="Logout"
+                  aria-label="Logout"
+                >
+                  <FaSignOutAlt />
+                </button>
+              </>
+            ) : (
+              <FaUser
+                style={styles.icon}
+                title="Login"
+                onClick={() => navigate("/login")}
+                tabIndex={0}
+                role="button"
+                aria-label="Go to login"
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate("/login"); }}
+              />
+            )}
+          </div>
         </div>
       </nav>
     </div>
