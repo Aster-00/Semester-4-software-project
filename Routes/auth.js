@@ -13,6 +13,10 @@ router.post("/request-password-reset", userController.requestPasswordReset);
 router.post("/logout", userController.logout);
 // * reset password with OTP
 router.put("/forgot-password", userController.resetPassword);
+// * verify MFA
+router.post("/verify-mfa", userController.verifyMFA);
+// * resend MFA
+router.post("/resend-mfa", userController.resendMFA);
 
 module.exports = router;
 

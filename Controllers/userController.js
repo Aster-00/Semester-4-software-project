@@ -6,29 +6,10 @@ const bcrypt = require("bcrypt");
 require("dotenv").config();
 const secretkey = process.env.secretkey;
 const nodemailer = require("nodemailer");
+const { generateOTP, sendOTPEmail } = require("../utils/emailService");
 
 const otpStore = new Map(); // Store: email -> { otp, hashedPassword, expiresAt }
 
-const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
-
-const sendOTPEmail = async (email, otp) => {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: "noorjjj2006@gmail.com",
-      pass: "crfj epkw eblp rata",
-    },
-  });
-
-  const mailOptions = {
-    from: "noorjjj2006@gmail.com",
-    to: email,
-    subject: "Password Reset OTP",
-    text: `Your OTP is: ${otp}. It will expire in 5 minutes.`,
-  };
-
-  await transporter.sendMail(mailOptions);
-};
 const userController = {
   register: async (req, res) => {
     try {
@@ -69,40 +50,31 @@ const userController = {
         return res.status(401).json({ message: "Incorrect password" });
       }
 
-      // Generate a JWT token
-      const token = jwt.sign(
-        {
+      // Generate and send MFA code
+      const mfaCode = generateOTP();
+      const mfaCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      // Save MFA code to user
+      user.mfaCode = mfaCode;
+      user.mfaCodeExpires = mfaCodeExpires;
+      await user.save();
+
+      try {
+        // Send MFA code via email with isLoginVerification flag set to true
+        await sendOTPEmail(email, mfaCode, true);
+
+        // Return success response without token
+        return res.status(200).json({
+          message: "Please verify your login with the code sent to your email",
+          requireMFA: true,
           user: {
-            _id: user._id,
-            role: user.role,
             email: user.email
           }
-        },
-        secretkey,
-        { expiresIn: '1h' }
-      );
-
-      // Set cookie expiration
-      const cookieExpiration = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-
-      // Send the response
-      return res
-        .cookie("token", token, {
-          expires: cookieExpiration,
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: "lax",
-        })
-        .status(200)
-        .json({
-          message: "Login successful",
-          user: {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role
-          }
         });
+      } catch (emailError) {
+        console.error("Error sending email:", emailError);
+        return res.status(500).json({ message: "Failed to send verification code" });
+      }
 
     } catch (error) {
       console.error("Error logging in:", error);
@@ -377,6 +349,113 @@ const userController = {
       res.status(500).json({ message: "Failed to reset password" });
     }
   },
+
+  verifyMFA: async (req, res) => {
+    try {
+      const { email, otp } = req.body;
+
+      // Find user and verify OTP
+      const user = await userModel.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if OTP is valid and not expired
+      if (!user.mfaCode || !user.mfaCodeExpires || user.mfaCode !== otp) {
+        return res.status(401).json({ message: "Invalid verification code" });
+      }
+
+      if (new Date() > user.mfaCodeExpires) {
+        return res.status(401).json({ message: "Verification code has expired" });
+      }
+
+      // Clear MFA code
+      user.mfaCode = null;
+      user.mfaCodeExpires = null;
+      await user.save();
+
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          user: {
+            _id: user._id,
+            role: user.role,
+            email: user.email
+          }
+        },
+        secretkey,
+        { expiresIn: '1h' }
+      );
+
+      // Set cookie expiration
+      const cookieExpiration = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Send the response with token
+      return res
+        .cookie("token", token, {
+          expires: cookieExpiration,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: "lax",
+        })
+        .status(200)
+        .json({
+          message: "Login successful",
+          user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+          }
+        });
+
+    } catch (error) {
+      console.error("Error verifying MFA:", error);
+      res.status(500).json({
+        message: "Server error during MFA verification",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  },
+
+  resendMFA: async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      // Find the user
+      const user = await userModel.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Generate new MFA code
+      const mfaCode = generateOTP();
+      const mfaCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      // Save new MFA code
+      user.mfaCode = mfaCode;
+      user.mfaCodeExpires = mfaCodeExpires;
+      await user.save();
+
+      try {
+        // Send new MFA code via email with isLoginVerification flag set to true
+        await sendOTPEmail(email, mfaCode, true);
+        return res.status(200).json({
+          message: "New verification code sent successfully"
+        });
+      } catch (emailError) {
+        console.error("Error sending email:", emailError);
+        return res.status(500).json({ message: "Failed to send verification code" });
+      }
+
+    } catch (error) {
+      console.error("Error resending MFA code:", error);
+      res.status(500).json({
+        message: "Server error while resending verification code",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
 }
 
 module.exports = userController;

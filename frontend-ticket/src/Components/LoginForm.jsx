@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../services/api";
+import MFAVerification from "./MFAVerification";
 import "./LoginForm.css";
 
 const LoginForm = () => {
@@ -10,19 +11,19 @@ const LoginForm = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showMFA, setShowMFA] = useState(false);
   const navigate = useNavigate();
 
   const { email, password } = formData;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(null); // Clear error when user types
+    setError(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Simple validation
     if (!email || !password) {
       setError("Please fill in all fields");
       return;
@@ -32,19 +33,17 @@ const LoginForm = () => {
       setLoading(true);
       setError(null);
 
-      // Make API request to backend using our authService
+      // First step: Initial login attempt
       const response = await authService.login({ email, password });
 
-      // Debug logging
-      console.log("Full response:", response);
-      console.log("Response data:", response.data);
-      console.log("Token:", response.data.token);
-
-      // Store user data in localStorage
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-
-      // Redirect to events page
-      navigate("/events");
+      // If MFA is required, show the MFA verification component
+      if (response.data.requireMFA) {
+        setShowMFA(true);
+      } else {
+        // If MFA is not required, proceed with normal login
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        navigate("/events");
+      }
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -55,6 +54,34 @@ const LoginForm = () => {
       setLoading(false);
     }
   };
+
+  const handleMFASuccess = () => {
+    setShowMFA(false);
+    navigate("/events");
+  };
+
+  const handleMFACancel = () => {
+    setShowMFA(false);
+    setFormData({ email: "", password: "" });
+  };
+
+  if (showMFA) {
+    return (
+      <div className="auth-container">
+        <MFAVerification
+          email={email}
+          onVerificationSuccess={handleMFASuccess}
+          onCancel={handleMFACancel}
+        />
+        <div className="auth-image">
+          <div className="auth-overlay">
+            <h3>Secure Login</h3>
+            <p>We're keeping your account safe with two-factor authentication.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-container">

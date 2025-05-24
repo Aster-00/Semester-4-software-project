@@ -38,7 +38,10 @@ export const authService = {
   requestPasswordReset: (email) => api.post('/v1/request-password-reset', { email }),
   resetPassword: (data) => api.put('/v1/forgot-password', data),
   updateRole: (role) => api.put(`/v1/users/update-role/${role}`),
-  logout: () => api.post('/v1/logout')
+  logout: () => api.post('/v1/logout'),
+  // New MFA endpoints
+  verifyMFA: (data) => api.post('/v1/verify-mfa', data),
+  resendMFACode: (email) => api.post('/v1/resend-mfa', { email })
 };
 
 // Events service endpoints
