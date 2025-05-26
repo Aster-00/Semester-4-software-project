@@ -11,6 +11,8 @@ const eventRoutes = require("./Routes/event");
 const authRoutes = require("./Routes/auth");
 const bookingRoutes = require("./Routes/booking");
 const authenticationMiddleware = require('./Middleware/authenticationMiddleware');
+const bookingRoutes = require("./Routes/booking");
+const authenticationMiddleware = require('./Middleware/authenticationMiddleware');
 const authrizationMiddleware = require("./Middleware/authorizationMiddleware");
 
 // Middleware

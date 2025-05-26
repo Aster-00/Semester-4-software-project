@@ -12,6 +12,8 @@ import MyBookings from "./Pages/MyBookings.jsx";
 import MyEventsPage from "./Pages/MyEventsPage.jsx";
 import EventForm from "./Pages/EventForm.jsx";
 import EventAnalyticsPage from "./Pages/EventAnalyticsPage.jsx";
+import RegisterForm from "./Components/RegisterForm";
+import ForgotPassword from "./Components/ForgotPassword";
 
 function App() {
   return (
@@ -25,6 +27,8 @@ function App() {
         <Route path="/profile/edit" element={<EditProfile />} />
         <Route path="/admin/*" element={<AdminPage />} />
         <Route path="/login" element={<Login></Login>} />
+        <Route path="/register" element={<RegisterForm></RegisterForm>} />
+        <Route path="/forgot-password" element={<ForgotPassword></ForgotPassword>} />
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/my-events" element={<MyEventsPage />} />
         <Route path="/my-events/new" element={<EventForm />} />

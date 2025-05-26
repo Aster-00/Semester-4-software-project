@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { authService } from "../services/api";
+import MFAVerification from "./MFAVerification";
 import "./LoginForm.css";
 
 const LoginForm = () => {
@@ -9,6 +10,8 @@ const LoginForm = () => {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showMFA, setShowMFA] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState(location.state?.message || null);
@@ -17,13 +20,12 @@ const LoginForm = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(null); // Clear error when user types
+    setError(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Simple validation
     if (!email || !password) {
       setError("Please fill in all fields");
       return;
@@ -33,34 +35,54 @@ const LoginForm = () => {
       setLoading(true);
       setError(null);
 
-      console.log("Attempting login...");
-      // Make API request to backend using our authService
+      // First step: Initial login attempt
       const response = await authService.login({ email, password });
 
-      // Debug logging
-      console.log("Full response:", response);
-      console.log("Response data:", response.data);
-
-      // Store user data in localStorage
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      console.log("User data stored in localStorage");
-
-      // Ensure we're not in a loading state before navigating
-      setLoading(false);
-      console.log("Loading state cleared, attempting navigation...");
-      
-      // Navigate to the original destination or home page
-      const destination = location.state?.from || '/';
-      navigate(destination);
+      // If MFA is required, show the MFA verification component
+      if (response.data.requireMFA) {
+        setShowMFA(true);
+      } else {
+        // If MFA is not required, proceed with normal login
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        navigate("/events");
+      }
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Login failed. Please check your credentials and try again."
+        "Login failed. Please check your credentials and try again."
       );
       console.error("Login error:", err);
       setLoading(false);
     }
   };
+
+  const handleMFASuccess = () => {
+    setShowMFA(false);
+    navigate("/events");
+  };
+
+  const handleMFACancel = () => {
+    setShowMFA(false);
+    setFormData({ email: "", password: "" });
+  };
+
+  if (showMFA) {
+    return (
+      <div className="auth-container">
+        <MFAVerification
+          email={email}
+          onVerificationSuccess={handleMFASuccess}
+          onCancel={handleMFACancel}
+        />
+        <div className="auth-image">
+          <div className="auth-overlay">
+            <h3>Secure Login</h3>
+            <p>We're keeping your account safe with two-factor authentication.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-container">

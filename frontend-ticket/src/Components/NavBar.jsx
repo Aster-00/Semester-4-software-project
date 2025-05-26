@@ -1,5 +1,5 @@
-import React from "react";
-import { FaSearch, FaUser } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaSearch, FaUser, FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 
