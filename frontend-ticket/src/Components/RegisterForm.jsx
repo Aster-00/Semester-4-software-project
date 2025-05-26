@@ -161,7 +161,7 @@ const RegisterForm = () => {
                             required
                         >
                             <option value="">Select your role</option>
-                            <option value="user">User</option>
+                            <option value="User">User</option>
                             <option value="Organizer">Organizer</option>
                             <option value="Admin">Admin</option>
                         </select>
