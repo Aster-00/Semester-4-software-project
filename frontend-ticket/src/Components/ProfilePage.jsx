@@ -205,18 +205,16 @@ function ProfilePage() {
             {/* Profile Picture */}
             <div style={styles.profileImageContainer}>
               <img
-                src={user.profilePicture}
-                alt={`${user.name}'s profile`}
+                src={user?.profilePicture || "https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff"}
+                alt={`${user?.name || 'User'}'s profile`}
                 style={styles.profileImage}
               />
             </div>
 
             {/* User Information */}
             <div style={styles.userInfo}>
-              <h1 style={styles.userName}>{user.name}</h1>
-
-              <p style={styles.userRole}>{user.role}</p>
-
+              <h1 style={styles.userName}>{user?.name || 'User'}</h1>
+              <p style={styles.userRole}>{user?.role || 'User'}</p>
               <div style={styles.emailContainer}>
                 <svg
                   style={styles.emailIcon}
@@ -226,7 +224,7 @@ function ProfilePage() {
                   <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
-                {user.email}
+                {user?.email || 'No email available'}
               </div>
             </div>
 
@@ -255,17 +253,17 @@ function ProfilePage() {
           <div>
             <div style={styles.infoItem}>
               <label style={styles.infoLabel}>Full Name</label>
-              <p style={styles.infoValue}>{user.name}</p>
+              <p style={styles.infoValue}>{user?.name || 'User'}</p>
             </div>
 
             <div style={styles.infoItem}>
               <label style={styles.infoLabel}>Email Address</label>
-              <p style={styles.infoValue}>{user.email}</p>
+              <p style={styles.infoValue}>{user?.email || 'No email available'}</p>
             </div>
 
             <div style={styles.infoItem}>
               <label style={styles.infoLabel}>Role</label>
-              <p style={styles.infoValue}>{user.role}</p>
+              <p style={styles.infoValue}>{user?.role || 'User'}</p>
             </div>
 
             <div>

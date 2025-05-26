@@ -73,7 +73,7 @@ api.interceptors.response.use(
 export const authService = {
   login: (credentials) => api.post('/v1/login', credentials),
   register: (userData) => api.post('/v1/register', userData),
-  viewprofile: () => api.get('//v1/users/profile'),
+  viewprofile: () => api.get('/v1/users/profile'),
   requestPasswordReset: (email) => api.post('/v1/request-password-reset', { email }),
   resetPassword: (data) => api.put('/v1/forgot-password', data),
   updateRole: (role) => api.put(`/v1/users/update-role/${role}`),

@@ -11,16 +11,13 @@ const eventRoutes = require("./Routes/event");
 const authRoutes = require("./Routes/auth");
 const bookingRoutes = require("./Routes/booking");
 const authenticationMiddleware = require('./Middleware/authenticationMiddleware');
-const bookingRoutes = require("./Routes/booking");
-const authenticationMiddleware = require('./Middleware/authenticationMiddleware');
-const authrizationMiddleware = require("./Middleware/authorizationMiddleware");
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors({
-  origin: 'http://localhost:5173', // Your frontend URL
+  origin: 'http://localhost:3000', // Your frontend URL
   credentials: true
 }));
 

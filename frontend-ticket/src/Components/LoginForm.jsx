@@ -14,7 +14,13 @@ const LoginForm = () => {
   const [showMFA, setShowMFA] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [error, setError] = useState(location.state?.message || null);
+
+  // Initialize error state with location message if it exists
+  React.useEffect(() => {
+    if (location.state?.message) {
+      setError(location.state.message);
+    }
+  }, [location.state]);
 
   const { email, password } = formData;
 

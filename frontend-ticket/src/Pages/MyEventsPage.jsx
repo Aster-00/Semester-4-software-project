@@ -17,31 +17,48 @@ function MyEventsPage() {
             try {
                 setLoading(true);
                 const response = await eventService.getUserEvents();
-                console.log("response: ", response);
+                console.log("Full API Response:", response);
+                console.log("Response data:", response.data);
                 
-                // Ensure response.data is an array before setting events
-                if (Array.isArray(response.data)) {
-                    setEvents(response.data);
+                // Check if response.data.events exists (common API pattern)
+                const eventsData = response.data.events || response.data;
+                
+                // Log the events data structure
+                console.log("Events data structure:", eventsData);
+                
+                // Ensure we're working with an array
+                if (Array.isArray(eventsData)) {
+                    console.log("Number of events found:", eventsData.length);
+                    setEvents(eventsData);
                 } else {
-                    // If it's not an array (e.g., a message object when no events),
-                    // set events to an empty array to prevent .map error
-                    setEvents([]); 
+                    console.warn("Events data is not an array:", eventsData);
+                    // If it's not an array, check if it's a single event object
+                    if (eventsData && typeof eventsData === 'object') {
+                        setEvents([eventsData]);
+                    } else {
+                        setEvents([]);
+                    }
                 }
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching events:', err);
+                console.error('Error response:', err.response);
                 // Handle unauthorized or other errors
                 if (err.response?.status === 403) {
                     setError('You are not authorized to view these events. Only organizers can access this page.');
+                } else if (err.response?.status === 401) {
+                    setError('Please log in to view your events.');
+                    // Optionally redirect to login
+                    navigate('/login');
                 } else {
-                    setError('Failed to load events. Please try again later.' + err);
+                    setError('Failed to load events. Error: ' + (err.response?.data?.message || err.message));
                 }
                 setLoading(false);
             }
         };
 
         fetchEvents();
-    }, []);
+    }, [navigate]);
 
     const handleEventDeleted = (deletedEventId) => {
         setEvents(prevEvents => prevEvents.filter(event => event._id !== deletedEventId));
@@ -61,8 +78,18 @@ function MyEventsPage() {
     if (events.length === 0) {
         return (
             <div className="my-events-container">
-                <h1>My Events</h1>
-                <p className="no-events">You haven't created any events yet.</p>
+                <div className="page-header">
+                    <h1>My Events</h1>
+                    <div className="page-header-actions">
+                        <Link to="/my-events/new" className="create-event-button">
+                            Create New Event
+                        </Link>
+                        <Link to="/my-events/analytics" className="analytics-button page-header-button">
+                            View Analytics
+                        </Link>
+                    </div>
+                </div>
+                <p className="no-events">You haven't created any events yet. Click "Create New Event" to get started!</p>
             </div>
         );
     }
