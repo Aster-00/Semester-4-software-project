@@ -111,6 +111,12 @@ const NavBar = () => {
     console.log('========================');
   }, [userString, user?.role]);
 
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
   const handleSearch = (e) => {
     if (e.key === 'Enter' && searchQuery.trim() !== '') {
       e.preventDefault();
@@ -149,17 +155,28 @@ const NavBar = () => {
           {isAdmin && (
             <Link to="/admin" style={styles.link}>Admin</Link>
           )}
-          {/* Conditionally render Login/Profile */}
+          {/* Conditionally render Login/Profile and Logout */}
           {isAuthenticated ? (
-             <FaUser
-              style={styles.icon}
-              title="Profile"
-              onClick={() => navigate("/profile")}
-              tabIndex={0}
-              role="button"
-              aria-label="Go to profile"
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate("/profile"); }}
-            />
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <FaUser
+                style={styles.icon}
+                title="Profile"
+                onClick={() => navigate("/profile")}
+                tabIndex={0}
+                role="button"
+                aria-label="Go to profile"
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate("/profile"); }}
+              />
+              <FaSignOutAlt
+                style={styles.icon}
+                title="Logout"
+                onClick={handleLogout}
+                tabIndex={0}
+                role="button"
+                aria-label="Logout"
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleLogout(); }}
+              />
+            </div>
           ) : (
             <Link to="/login" style={styles.link}>Login</Link>
           )}
