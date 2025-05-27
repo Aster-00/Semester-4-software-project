@@ -33,13 +33,12 @@ app.use(
 
 app.use("/api/v1", authRoutes);
 
-
-//to check if the user is authrized 
-app.use(authenticationMiddleware);
-
-//to get the user booking
-app.use("/api/v1/bookings", bookingRoutes);
+// Public routes (no authentication required)
 app.use("/api/v1/events", eventRoutes);
+
+// Protected routes (authentication required)
+app.use(authenticationMiddleware);
+app.use("/api/v1/bookings", bookingRoutes);
 app.use("/api/v1/users", userRoutes);
 
 const db_name = process.env.DB_NAME;

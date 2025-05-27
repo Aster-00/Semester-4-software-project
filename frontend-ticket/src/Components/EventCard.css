@@ -110,4 +110,34 @@
   .card:hover .card__content {
       /* Maybe reduce padding-bottom if delete button is there */
       /* padding-bottom: 40px; Example */
+  }
+
+  /* Login prompt styles */
+  .login-prompt {
+      margin: 15px 0 0;
+      font-size: 12px;
+      color: var(--accent-color) !important;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 8px;
+      background-color: rgba(102, 102, 102, 0.2);
+      border-radius: var(--button-border-radius);
+      border: 1px solid var(--accent-color);
+      text-align: center;
+      text-shadow: none;
+      animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+      0% {
+          opacity: 0.7;
+      }
+      50% {
+          opacity: 1;
+          transform: scale(1.02);
+      }
+      100% {
+          opacity: 0.7;
+      }
   } 

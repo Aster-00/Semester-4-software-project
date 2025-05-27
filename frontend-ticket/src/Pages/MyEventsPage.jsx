@@ -36,7 +36,7 @@ function MyEventsPage() {
                     if (eventsData && typeof eventsData === 'object') {
                         setEvents([eventsData]);
                     } else {
-                        setEvents([]);
+                    setEvents([]); 
                     }
                 }
                 setLoading(false);
@@ -79,7 +79,7 @@ function MyEventsPage() {
         return (
             <div className="my-events-container">
                 <div className="page-header">
-                    <h1>My Events</h1>
+                <h1>My Events</h1>
                     <div className="page-header-actions">
                         <Link to="/my-events/new" className="create-event-button">
                             Create New Event

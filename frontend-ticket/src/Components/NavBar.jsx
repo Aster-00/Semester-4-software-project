@@ -145,7 +145,7 @@ const NavBar = () => {
           <Link to="/events" style={styles.link}>Events</Link>
           {/* Show My Bookings link for authenticated users */}
           {isAuthenticated && (
-            <Link to="/my-bookings" style={styles.link}>My Bookings</Link>
+          <Link to="/my-bookings" style={styles.link}>My Bookings</Link>
           )}
           {/* Show My Events link for organizers */}
           {isOrganizer && (
@@ -158,15 +158,15 @@ const NavBar = () => {
           {/* Conditionally render Login/Profile and Logout */}
           {isAuthenticated ? (
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <FaUser
-                style={styles.icon}
-                title="Profile"
-                onClick={() => navigate("/profile")}
-                tabIndex={0}
-                role="button"
-                aria-label="Go to profile"
-                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate("/profile"); }}
-              />
+             <FaUser
+              style={styles.icon}
+              title="Profile"
+              onClick={() => navigate("/profile")}
+              tabIndex={0}
+              role="button"
+              aria-label="Go to profile"
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate("/profile"); }}
+            />
               <FaSignOutAlt
                 style={styles.icon}
                 title="Logout"
@@ -181,9 +181,9 @@ const NavBar = () => {
             <Link to="/login" style={styles.link}>Login</Link>
           )}
           {/* Register button for non-authenticated users */}
-          {!isAuthenticated && (
+           {!isAuthenticated && (
             <Link to="/register" style={styles.link}>Register</Link>
-          )}
+           )}
         </div>
       </nav>
     </div>

@@ -16,8 +16,14 @@ function EventCard({ id, title, description, location, date, organizerId, onDele
     // Show delete button only if user is admin or the organizer of this event
     const canDelete = isAdmin || isOrganizer;
 
-    // Determine the route based on user role
+    // Determine the route based on user login status and role
     const getRouteDestination = () => {
+        // If user is not logged in, route to login page
+        if (!user) {
+            return '/login';
+        }
+        
+        // If user is logged in, route based on role
         if (isUser) {
             return `/events/${id}`; // Route to event details/booking for regular users
         } else {
@@ -45,13 +51,20 @@ function EventCard({ id, title, description, location, date, organizerId, onDele
 
     return (
         <div className="card">
-            <Link to={getRouteDestination()} className="card-link-content">
+            <Link 
+                to={getRouteDestination()} 
+                className="card-link-content"
+                title={!user ? "Please log in to view event details" : "View event details"}
+            >
                 <img src={eventImage} alt={title} />
                 <div className="card__content">
                     <p className="card__title">{title}</p>
                     <p className="card__description">{description}</p>
                     <p className="card__description">{location}</p>
                     <p className="card__description">{date}</p>
+                    {!user && (
+                        <p className="login-prompt">Click to login and view details</p>
+                    )}
                 </div>
             </Link>
             {canDelete && (
