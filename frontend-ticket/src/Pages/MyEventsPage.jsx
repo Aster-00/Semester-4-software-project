@@ -118,6 +118,7 @@ function MyEventsPage() {
                         location={event.location}
                         date={new Date(event.date).toLocaleDateString()}
                         organizerId={event.organizer}
+                        image={event.image}
                         onDelete={handleEventDeleted}
                     />
                 ))}

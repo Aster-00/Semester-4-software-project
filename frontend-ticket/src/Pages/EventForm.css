@@ -252,8 +252,7 @@ button[type="submit"]:disabled::before {
   50% { opacity: 0.6; }
 }
 
-/* Style for file input if you add one later */
-/*
+/* Image upload styles */
 input[type="file"] {
   padding: 12px;
   border: 2px dashed #ced4da;
@@ -267,6 +266,12 @@ input[type="file"] {
 input[type="file"]:hover {
   border-color: #6c757d;
   background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+}
+
+input[type="file"]:focus {
+  outline: none;
+  border-color: #6c757d;
+  box-shadow: 0 0 0 4px rgba(108, 117, 125, 0.15);
 }
 
 input[type="file"]::file-selector-button {
@@ -285,4 +290,33 @@ input[type="file"]::file-selector-button:hover {
   background: linear-gradient(135deg, #5a6268, #343a40);
   transform: translateY(-1px);
 }
-*/
+
+/* Image preview styles */
+.image-preview {
+  margin-top: 15px;
+  text-align: center;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.image-preview img {
+  border: 2px solid #dee2e6;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.image-preview img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

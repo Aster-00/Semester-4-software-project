@@ -8,19 +8,13 @@ const authenticationMiddleware = require("../Middleware/authenticationMiddleware
 
 // Public routes (no authentication required)
 router.get('/', eventController.getApprovedEvents);
-
-
-router.get('/all', authorizationMiddleware('Admin'), eventController.getAllEvents);
-/*
-leave the getEventDetails down i spent more than 1 hour tring to understand 
-why does the database take all as a parameter for a func that doesnt take parameters 
-the code routes "/all" to "/:id" so leave the /:id routes down
-*/
-
-router.post('/', authorizationMiddleware(['Organizer']), eventController.createEvent);
-router.patch('/approveevent/:eventId', authorizationMiddleware(['Admin']), eventController.approveEvent);
-router.patch('/decline/:eventId',authorizationMiddleware(['Admin']),eventController.declineEvent);
 router.get('/:id', eventController.getEventDetails);
-router.delete('/:id', authorizationMiddleware(['Organizer','Admin']), eventController.deleteEvent);
-router.put('/:id', authorizationMiddleware(['Admin', 'Organizer']), eventController.updateEvent);
+
+// Protected routes (authentication + authorization required)
+router.get('/all', authenticationMiddleware, authorizationMiddleware('Admin'), eventController.getAllEvents);
+router.post('/', authenticationMiddleware, authorizationMiddleware(['Organizer']), eventController.createEvent);
+router.patch('/approveevent/:eventId', authenticationMiddleware, authorizationMiddleware(['Admin']), eventController.approveEvent);
+router.patch('/decline/:eventId', authenticationMiddleware, authorizationMiddleware(['Admin']), eventController.declineEvent);
+router.delete('/:id', authenticationMiddleware, authorizationMiddleware(['Organizer','Admin']), eventController.deleteEvent);
+router.put('/:id', authenticationMiddleware, authorizationMiddleware(['Admin', 'Organizer']), eventController.updateEvent);
 module.exports = router;

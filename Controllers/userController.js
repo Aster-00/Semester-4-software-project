@@ -3,6 +3,7 @@ const eventModel = require("../Models/Event");
 const organizerModel = require('../Models/Organizer');
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
 require("dotenv").config();
 const secretkey = process.env.secretkey;
 const nodemailer = require("nodemailer");
@@ -116,13 +117,19 @@ const userController = {
   updateUser: async (req, res) => {
     try {
       const userId = req.user._id;
+      const updateData = {
+        name: req.body.name,
+        email: req.body.email,
+      };
+
+      // Only update profilePicture if provided
+      if (req.body.profilePicture) {
+        updateData.profilePicture = req.body.profilePicture;
+      }
+
       const user = await userModel.findByIdAndUpdate(
         userId,
-        {
-          name: req.body.name,
-          email: req.body.email,
-          profilePicture: req.profilePicture
-        },
+        updateData,
         {
           new: true,
         }
@@ -137,15 +144,18 @@ const userController = {
 
   getUserEvents: async (req, res) => {
     try {
-      const userID = req.user._id;
-      const events = await eventModel.find({ participants: userID })
+      const userID = req.user._id;      
+      const events = await eventModel.find({ organizer: userID });
+      
       if (events.length == 0) {
         return res.status(200).json({ message: "no events found for the user" });
       }
+      
       console.log("events found for the user")
       return res.status(200).json(events);
     }
     catch (error) {
+      console.error("Error getting user events:", error);
       return res.status(500).json({ message: "error getting events" });
     }
   },
@@ -247,24 +257,83 @@ const userController = {
 
   updateRole: async (req, res) => {
     try {
-      const newRole = req.newRole
+      const userId = req.params.id;
+      const newRole = req.body.role;
 
-      if (!newRole) return res.status(400).message("Empty role")
+      console.log("=== UPDATE ROLE REQUEST ===");
+      console.log("User ID:", userId);
+      console.log("New Role:", newRole);
+      console.log("Request body:", req.body);
+      console.log("Request user:", req.user);
 
-      const user = await UserModel.findByIdAndUpdate(req.params.id,
+      if (!newRole) {
+        console.log("Role is missing from request");
+        return res.status(400).json({ message: "Role is required" });
+      }
 
-        {
-          role: req.body.role
-        },
-        {
-          new: true,
-        }
+      // Validate role
+      const validRoles = ["User", "Organizer", "Admin"];
+      if (!validRoles.includes(newRole)) {
+        console.log("Invalid role provided:", newRole);
+        return res.status(400).json({ message: "Invalid role. Must be one of: " + validRoles.join(", ") });
+      }
+
+      // Validate user ID
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        console.log("Invalid user ID:", userId);
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      console.log("Updating user in database...");
+      const user = await userModel.findByIdAndUpdate(
+        userId,
+        { role: newRole },
+        { new: true, runValidators: true }
       );
-      return res.status(200).message("Role Updated Successfully")
 
-    }
-    catch (err) {
-      return res.status(500).json({ message: error.message });
+      if (!user) {
+        console.log("User not found with ID:", userId);
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log("Role updated successfully for user:", user.name, "to role:", user.role);
+      return res.status(200).json({ 
+        message: "Role updated successfully", 
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        }
+      });
+
+    } catch (err) {
+      console.error("=== ERROR UPDATING ROLE ===");
+      console.error("Error:", err);
+      console.error("Error name:", err.name);
+      console.error("Error message:", err.message);
+      console.error("Error stack:", err.stack);
+      
+      // Handle specific error types
+      if (err.name === 'ValidationError') {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          error: err.message 
+        });
+      }
+      
+      if (err.name === 'CastError') {
+        return res.status(400).json({ 
+          message: "Invalid data format", 
+          error: err.message 
+        });
+      }
+      
+      return res.status(500).json({ 
+        message: "Internal server error", 
+        error: err.message,
+        errorType: err.name 
+      });
     }
   },
 

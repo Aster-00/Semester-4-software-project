@@ -91,12 +91,8 @@ export const eventService = {
     updateEvent: (id, eventData) => api.put(`/v1/events/${id}`, eventData, { withCredentials: true }),
     getApprovedEvents: () => api.get('/v1/events'),
     deleteEvent: (id) => api.delete(`/events/${id}`),
-    getUserEvents: () => api.get('/v1/users/events', {
-            withCredentials: true
-        }),
-    getEventsAnalytics: () => api.get('/v1/users/events/analytics', {
-            withCredentials: true
-        })
+    getUserEvents: () => api.get('/v1/users/events', { withCredentials: true }),
+    getEventsAnalytics: () => api.get('/v1/users/events/analytics', { withCredentials: true })
 };
 // Booking service endpoints
 export const bookingService = {

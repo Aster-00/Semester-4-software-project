@@ -10,39 +10,80 @@ require("dotenv").config();
 
 const eventController = {
   createEvent: async (req, res) => {
-    const {
-      title, description, location,
-      category, date, time, totalTickets,
-      price
-    } = req.body;
-
-    const organizerId = req.user._id;
-
     try {
+      console.log("=== CREATE EVENT REQUEST ===");
+      console.log("Request body:", req.body);
+      console.log("User:", req.user);
+
+      const {
+        title, description, location,
+        category, date, time, totalTickets
+      } = req.body;
+
+      const organizerId = req.user._id;
+
+      // Validate required fields
+      if (!title || !description || !location || !category || !date || !time || !totalTickets) {
+        console.log("Missing required fields");
+        return res.status(400).json({ 
+          message: "Missing required fields",
+          received: { title: !!title, description: !!description, location: !!location, category: !!category, date: !!date, time: !!time, totalTickets: !!totalTickets }
+        });
+      }
+
       // Check for duplicate event
       const existingEvent = await eventModel.findOne({ title, date, time });
       if (existingEvent) {
+        console.log("Duplicate event found");
         return res.status(409).json({ message: "An event with the same title, date, and time already exists." });
       }
 
       // Create new event
-      const event = new eventModel({
+      const eventData = {
         title,
         description,
         location,
         category,
         date,
         time,
-        totalTickets,
-        price,
+        totalTickets: parseInt(totalTickets),
         organizer: organizerId
-      });
+      };
 
+      console.log("Creating event with data:", eventData);
+      const event = new eventModel(eventData);
       await event.save();
+      
+      console.log("Event created successfully:", event._id);
       return res.status(201).json(event);
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'Internal server error' });
+      console.error("=== CREATE EVENT ERROR ===");
+      console.error("Error:", error);
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+      
+      // Handle specific error types
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          error: error.message,
+          details: error.errors 
+        });
+      }
+      
+      if (error.name === 'CastError') {
+        return res.status(400).json({ 
+          message: "Invalid data format", 
+          error: error.message 
+        });
+      }
+      
+      return res.status(500).json({ 
+        message: 'Internal server error',
+        error: error.message,
+        errorType: error.name
+      });
     }
   },
 

@@ -3,7 +3,7 @@ import eventImage from '../elements/event-pic.jpeg';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-function EventCard({ id, title, description, location, date, organizerId, onDelete }) {
+function EventCard({ id, title, description, location, date, organizerId, image, onDelete }) {
     const navigate = useNavigate();
 
     // Get current user from localStorage
@@ -56,7 +56,7 @@ function EventCard({ id, title, description, location, date, organizerId, onDele
                 className="card-link-content"
                 title={!user ? "Please log in to view event details" : "View event details"}
             >
-                <img src={eventImage} alt={title} />
+                <img src={image || eventImage} alt={title} />
                 <div className="card__content">
                     <p className="card__title">{title}</p>
                     <p className="card__description">{description}</p>
